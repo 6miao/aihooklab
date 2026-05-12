@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useRef } from "react"
+import { useState, useCallback, useRef, useEffect } from "react"
 import type { HookResult, Platform, ContentType, GenerateStatus, ApiErrorCode } from "@/types"
 
 interface GenerateState {
@@ -117,6 +117,10 @@ export function useGenerate() {
   const reset = useCallback(() => {
     abortRef.current?.abort()
     setState({ status: 'idle', hooks: [], progress: 0, error: null, errorCode: null })
+  }, [])
+
+  useEffect(() => {
+    return () => abortRef.current?.abort()
   }, [])
 
   return { ...state, generate, reset }
