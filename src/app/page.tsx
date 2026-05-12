@@ -33,13 +33,13 @@ function saveDraft(topic: string, platform: Platform, contentType: ContentType) 
 }
 
 export default function Home() {
-  const draft = loadDraft()
-  const [topic, setTopic] = useState(draft?.topic || '')
-  const [platform, setPlatform] = useState<Platform>(draft?.platform || 'xiaohongshu')
-  const [contentType, setContentType] = useState<ContentType>(draft?.contentType || 'video')
+  const [topic, setTopic] = useState('')
+  const [platform, setPlatform] = useState<Platform>('xiaohongshu')
+  const [contentType, setContentType] = useState<ContentType>('video')
   const [favModalOpen, setFavModalOpen] = useState(false)
   const [historyModalOpen, setHistoryModalOpen] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null)
+  const [draftLoaded, setDraftLoaded] = useState(false)
 
   const { status, hooks, progress, error, errorCode, generate } = useGenerate()
   const { favorites, toggle: toggleFavorite, isFavorite } = useFavorites()
@@ -47,8 +47,20 @@ export default function Home() {
   const { copiedId, copy } = useClipboard()
 
   useEffect(() => {
-    saveDraft(topic, platform, contentType)
-  }, [topic, platform, contentType])
+    const draft = loadDraft()
+    if (draft) {
+      if (draft.topic) setTopic(draft.topic)
+      if (draft.platform) setPlatform(draft.platform)
+      if (draft.contentType) setContentType(draft.contentType)
+    }
+    setDraftLoaded(true)
+  }, [])
+
+  useEffect(() => {
+    if (draftLoaded) {
+      saveDraft(topic, platform, contentType)
+    }
+  }, [topic, platform, contentType, draftLoaded])
 
   const handleGenerate = useCallback(async () => {
     const result = await generate(topic, platform, contentType)
