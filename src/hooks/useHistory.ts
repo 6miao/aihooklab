@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useEffect } from "react"
+import { useState, useCallback } from "react"
 import type { HookResult } from "@/types"
 import { STORAGE_KEYS, MAX_HISTORY } from "@/lib/prompt"
 
@@ -14,11 +14,7 @@ function loadHistory(): HookResult[] {
 }
 
 export function useHistory() {
-  const [history, setHistory] = useState<HookResult[]>([])
-
-  useEffect(() => {
-    setHistory(loadHistory())
-  }, [])
+  const [history, setHistory] = useState<HookResult[]>(() => loadHistory())
 
   const addBatch = useCallback((hooks: HookResult[]) => {
     setHistory((prev) => {

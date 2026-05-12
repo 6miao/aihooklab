@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useEffect } from "react"
+import { useState, useCallback } from "react"
 import type { HookResult } from "@/types"
 import { STORAGE_KEYS, MAX_FAVORITES } from "@/lib/prompt"
 
@@ -14,11 +14,7 @@ function loadFavorites(): HookResult[] {
 }
 
 export function useFavorites() {
-  const [favorites, setFavorites] = useState<HookResult[]>([])
-
-  useEffect(() => {
-    setFavorites(loadFavorites())
-  }, [])
+  const [favorites, setFavorites] = useState<HookResult[]>(() => loadFavorites())
 
   const persist = useCallback((items: HookResult[]) => {
     try {
