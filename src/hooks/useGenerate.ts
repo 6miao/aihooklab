@@ -9,6 +9,7 @@ interface GenerateState {
   progress: number
   error: string | null
   errorCode: ApiErrorCode | null
+  regeneratingIndex: number | null
 }
 
 export function useGenerate() {
@@ -18,6 +19,7 @@ export function useGenerate() {
     progress: 0,
     error: null,
     errorCode: null,
+    regeneratingIndex: null,
   })
   const abortRef = useRef<AbortController | null>(null)
 
@@ -27,7 +29,7 @@ export function useGenerate() {
       const controller = new AbortController()
       abortRef.current = controller
 
-      setState({ status: 'generating', hooks: [], progress: 0, error: null, errorCode: null })
+      setState({ status: 'generating', hooks: [], progress: 0, error: null, errorCode: null, regeneratingIndex: null })
 
       try {
         const response = await fetch('/api/generate', {
@@ -53,6 +55,7 @@ export function useGenerate() {
             progress: 0,
             error: messages[code],
             errorCode: code,
+            regeneratingIndex: null,
           })
           return
         }
@@ -82,6 +85,7 @@ export function useGenerate() {
                     progress: hooks.length,
                     error: null,
                     errorCode: null,
+                    regeneratingIndex: null,
                   })
                 }
               } catch {
@@ -97,6 +101,7 @@ export function useGenerate() {
           progress: 10,
           error: null,
           errorCode: null,
+          regeneratingIndex: null,
         })
 
         return hooks
@@ -108,7 +113,36 @@ export function useGenerate() {
           progress: prev.progress,
           error: `连接中断，已生成 ${prev.progress}/10 条，点击重试`,
           errorCode: 'NETWORK_ERROR',
+          regeneratingIndex: null,
         }))
+      }
+    },
+    []
+  )
+
+  const regenerateSingle = useCallback(
+    async (index: number, style: string, topic: string, platform: Platform, contentType: ContentType) => {
+      setState((prev) => ({ ...prev, regeneratingIndex: index }))
+
+      try {
+        const response = await fetch('/api/generate/single', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ topic, platform, contentType, style }),
+        })
+
+        if (!response.ok) return
+
+        const data = await response.json()
+        if (!data.hook) return
+
+        setState((prev) => {
+          const next = [...prev.hooks]
+          next[index] = data.hook
+          return { ...prev, hooks: next, regeneratingIndex: null }
+        })
+      } catch {
+        setState((prev) => ({ ...prev, regeneratingIndex: null }))
       }
     },
     []
@@ -116,12 +150,12 @@ export function useGenerate() {
 
   const reset = useCallback(() => {
     abortRef.current?.abort()
-    setState({ status: 'idle', hooks: [], progress: 0, error: null, errorCode: null })
+    setState({ status: 'idle', hooks: [], progress: 0, error: null, errorCode: null, regeneratingIndex: null })
   }, [])
 
   useEffect(() => {
     return () => abortRef.current?.abort()
   }, [])
 
-  return { ...state, generate, reset }
+  return { ...state, generate, regenerateSingle, reset }
 }

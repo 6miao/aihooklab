@@ -41,7 +41,7 @@ export default function Home() {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null)
   const [draftLoaded, setDraftLoaded] = useState(false)
 
-  const { status, hooks, progress, error, errorCode, generate } = useGenerate()
+  const { status, hooks, progress, error, errorCode, regeneratingIndex, generate, regenerateSingle } = useGenerate()
   const { favorites, toggle: toggleFavorite, isFavorite } = useFavorites()
   const { history, addBatch } = useHistory()
   const { copiedId, copy } = useClipboard()
@@ -81,6 +81,13 @@ export default function Home() {
     [copy]
   )
 
+  const handleRegenerate = useCallback(
+    (index: number, style: string) => {
+      regenerateSingle(index, style, topic, platform, contentType)
+    },
+    [regenerateSingle, topic, platform, contentType]
+  )
+
   return (
     <div className="min-h-screen pb-16">
       <Header
@@ -110,10 +117,12 @@ export default function Home() {
         hooks={hooks}
         progress={progress}
         error={error}
+        regeneratingIndex={regeneratingIndex}
         isFavorite={isFavorite}
         onToggleFavorite={toggleFavorite}
         copiedId={copiedId}
         onCopy={handleCopy}
+        onRegenerate={handleRegenerate}
         onRetry={handleGenerate}
       />
 
