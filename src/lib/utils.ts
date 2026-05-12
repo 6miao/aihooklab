@@ -17,6 +17,7 @@ export function formatTimestamp(ts: number): string {
 }
 
 export async function copyToClipboard(text: string): Promise<boolean> {
+  if (typeof document === 'undefined' || typeof navigator === 'undefined') return false
   try {
     await navigator.clipboard.writeText(text)
     return true
