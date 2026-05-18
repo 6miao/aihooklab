@@ -16,18 +16,11 @@ jobs:
 
       - run: npm ci
 
-      - run: npm run build
-
       - name: Deploy to Netlify
-        uses: nwtgck/actions-netlify@v3
-        with:
-          publish-dir: '.next'
-          production-branch: master
-          production-deploy: true
-          enable-pull-request-comment: false
-          enable-commit-comment: false
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          netlify-config-path: ./netlify.toml
+        run: npx netlify-cli deploy --build --prod --message "${{ github.event.head_commit.message }}"
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: b4889cb6-8c81-46f9-ac9d-add955ad976b
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          DEEPSEEK_BASE_URL: https://api.deepseek.com
+          DEEPSEEK_MODEL: deepseek-chat
